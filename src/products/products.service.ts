@@ -1,13 +1,14 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import type { Cache } from 'cache-manager';
+import { Model, Types } from 'mongoose';
+import { Product, ProductDocument } from '../database/schemas/product.schema';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    private prisma: PrismaService,
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     // Step 1: Inject the Redis Cache Manager to optimize database read operations
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
@@ -15,54 +16,67 @@ export class ProductsService {
   /**
    * Process: Creating a new product
    */
-  async create(data: Prisma.ProductCreateInput) {
-    // Save to PostgreSQL
-    const product = await this.prisma.product.create({ data });
-    // Invalidate/clear the cache since our product list has been updated.
-    return product;
+  async create(data: {
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+  }) {
+    // Save to MongoDB
+    const product = new this.productModel(data);
+    return product.save();
   }
 
   /**
    * Process: Retrieving products utilizing Pagination and Redis Cache
    */
-  async findAll(cursor?: number, limit = 10) {
+  async findAll(cursor?: string, limit = 10) {
     // Step 2a: Generate a unique cache key based on the paginated parameters.
-    const cacheKey = `products_${cursor || 0}_${limit}`;
-    
+    const cacheKey = `products_${cursor || '0'}_${limit}`;
+
     // Step 2b: Check if Redis already has this request cached to avoid querying the DB.
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
 
     // Step 2c: If cache is missed, construct the optimized database query.
-    const query: Prisma.ProductFindManyArgs = {
-      take: limit, // How many items to return
-      orderBy: { id: 'asc' }, // Ensure strict ordering
-    };
-    
+    // Use cursor-based pagination with MongoDB ObjectId comparison.
+    const query: { _id?: { $gt: Types.ObjectId } } = {};
+
     // Step 2d: Apply the Cursor based pagination logic.
     if (cursor) {
-      query.cursor = { id: cursor }; // Start querying directly AFTER this unique ID
-      query.skip = 1; // Skip the actual cursor ID itself
+      query._id = { $gt: new Types.ObjectId(cursor) }; // Start querying directly AFTER this unique ID
     }
-    
+
     // Step 2e: Query the database.
-    const products = await this.prisma.product.findMany(query);
-    
+    const products = await this.productModel
+      .find(query)
+      .sort({ _id: 1 }) // Ensure strict ordering
+      .limit(limit)
+      .exec();
+
     // Step 2f: Store the expensive result in Redis for future requests (60,000 ms duration).
-    await this.cacheManager.set(cacheKey, products, 60000); 
-    
+    await this.cacheManager.set(cacheKey, products, 60000);
+
     return products;
   }
 
-  async findOne(id: number) {
-    return this.prisma.product.findUnique({ where: { id } });
+  async findOne(id: string) {
+    return this.productModel.findById(id).exec();
   }
 
-  async update(id: number, data: Prisma.ProductUpdateInput) {
-    return this.prisma.product.update({ where: { id }, data });
+  async update(
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      price: number;
+      stock: number;
+    }>,
+  ) {
+    return this.productModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
-  async remove(id: number) {
-    return this.prisma.product.delete({ where: { id } });
+  async remove(id: string) {
+    return this.productModel.findByIdAndDelete(id).exec();
   }
 }

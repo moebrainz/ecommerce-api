@@ -1,7 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   // Initialize the NestJS application with the root AppModule
@@ -28,15 +28,20 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth() // Allows users to input their JWT token in the Swagger UI
     .build();
-  
+
   // Step 5: Mount the Swagger UI to the '/api/docs' route
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-  
-  console.log('DB URL:', process.env.DATABASE_URL);
+
+  console.log(
+    'MongoDB URI:',
+    process.env.MONGODB_URI ? 'configured' : 'NOT SET',
+  );
 
   // Start the server on the configured PORT (or default to 3000)
   await app.listen(process.env.PORT ?? 3000);
-  console.log(`Application is running on: http://localhost:${process.env.PORT ?? 3000}/api/docs`);
+  console.log(
+    `Application is running on: http://localhost:${process.env.PORT ?? 3000}/api/docs`,
+  );
 }
-bootstrap();
+void bootstrap();

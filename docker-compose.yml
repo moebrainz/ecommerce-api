@@ -1,17 +1,15 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: ecommerce_postgres
+  mongodb:
+    image: mongo:7
+    container_name: ecommerce_mongodb
     environment:
-      POSTGRES_USER: ecommerce_user
-      POSTGRES_PASSWORD: ecommerce_password
-      POSTGRES_DB: ecommerce_db
+      MONGO_INITDB_DATABASE: ecommerce_db
     ports:
-      - "5433:5432"
+      - "27017:27017"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mongodata:/data/db
     restart: unless-stopped
 
   redis:
@@ -22,4 +20,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  pgdata:
+  mongodata:

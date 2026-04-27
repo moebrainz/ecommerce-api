@@ -1,0 +1,21 @@
+# MongoDB Migration TODO
+
+- [x] Create Mongoose schemas (User, Product, Cart, Order, Category, Address, Review)
+- [x] Create DatabaseModule with MongooseModule.forRoot and forFeature
+- [x] Create common enums (Role, OrderStatus) to replace Prisma enums
+- [x] Migrate UsersService and UsersModule to Mongoose
+- [x] Migrate ProductsService and ProductsModule to Mongoose
+- [x] Migrate CartService and CartModule to Mongoose
+- [x] Migrate OrdersService and OrdersModule to Mongoose
+- [x] Migrate CheckoutService and CheckoutModule to Mongoose
+- [x] Update AppModule to use DatabaseModule instead of PrismaModule
+- [x] Fix roles.decorator.ts to import Role from local enum (not @prisma/client)
+- [x] Fix auth.service.ts generateToken to use string userId (MongoDB ObjectId)
+- [x] Fix all controllers to pass string IDs (remove +id coercions)
+- [x] Update cart.dto.ts productId from number to string
+- [x] Update checkout.dto.ts orderId from number to string
+- [x] Update .env and .env.example for MongoDB
+- [x] Update docker-compose.yml (PostgreSQL -> MongoDB)
+- [x] Update main.ts DB log
+- [x] Remove Prisma files (src/prisma/, prisma/, prisma.config.ts)
+- [x] Uninstall Prisma packages

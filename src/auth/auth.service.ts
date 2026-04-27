@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -6,7 +10,6 @@ import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 @Injectable()
 // AuthService: The central hub for authentication. It handles creating new users securely and logging them in.
-
 export class AuthService {
   constructor(
     private usersService: UsersService,
@@ -26,7 +29,7 @@ export class AuthService {
 
     // 1(b). Hash the plaintext password using bcrypt to securely store it in the database.
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    
+
     // 1(c). Save the user to the database using the UsersService.
     const user = await this.usersService.create({
       email: dto.email,
@@ -61,7 +64,7 @@ export class AuthService {
   /**
    * Utility Process: JWT Token Generation
    */
-  private generateToken(userId: number, email: string, role: string) {
+  private generateToken(userId: string, email: string, role: string) {
     // Create the payload structure containing public (but unmodifiable) identifying data.
     const payload = { sub: userId, email, role };
     // Sign the token using the application's secure JWT_SECRET and return it.

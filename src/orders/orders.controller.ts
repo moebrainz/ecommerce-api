@@ -1,7 +1,19 @@
-import { Controller, Post, Get, Param, UseGuards, Request } from '@nestjs/common';
-import { OrdersService } from './orders.service';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { UserDocument } from '../database/schemas/user.schema';
+import { OrdersService } from './orders.service';
+
+interface RequestWithUser extends Request {
+  user: UserDocument;
+}
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -17,7 +29,7 @@ export class OrdersController {
    */
   @Post()
   @ApiOperation({ summary: 'Create an order from the current cart' })
-  createOrder(@Request() req: any) {
+  createOrder(@Request() req: RequestWithUser) {
     return this.ordersService.createOrderFromCart(req.user.id);
   }
 
@@ -27,7 +39,7 @@ export class OrdersController {
    */
   @Get()
   @ApiOperation({ summary: 'Get order history' })
-  getOrderHistory(@Request() req: any) {
+  getOrderHistory(@Request() req: RequestWithUser) {
     return this.ordersService.getOrderHistory(req.user.id);
   }
 
@@ -37,7 +49,7 @@ export class OrdersController {
    */
   @Get(':id')
   @ApiOperation({ summary: 'Get order details by ID' })
-  getOrderDetails(@Request() req: any, @Param('id') id: string) {
-    return this.ordersService.getOrderDetails(req.user.id, +id);
+  getOrderDetails(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.ordersService.getOrderDetails(req.user.id, id);
   }
 }

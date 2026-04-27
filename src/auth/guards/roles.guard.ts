@@ -1,11 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '@prisma/client';
+import { Role } from '../../common/enums/role.enum';
+import { UserDocument } from '../../database/schemas/user.schema';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 /**
  * RolesGuard introduces secure Role-Based Access Control (RBAC).
- * Once the JwtAuthGuard extracts the user details from the token, this guard compares the 
+ * Once the JwtAuthGuard extracts the user details from the token, this guard compares the
  * User's "Role" to our endpoint's specifically required roles.
  */
 @Injectable()
@@ -25,7 +26,9 @@ export class RolesGuard implements CanActivate {
     }
 
     // Step 3: Fetch the requesting user directly from the parsed HTTP connection.
-    const { user } = context.switchToHttp().getRequest();
+    const { user }: { user: UserDocument } = context
+      .switchToHttp()
+      .getRequest();
 
     // Step 4: Verify that the User's explicit Database role natively matches what the endpoint demands.
     return requiredRoles.includes(user.role);

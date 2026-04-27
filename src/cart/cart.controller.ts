@@ -1,13 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserDocument } from '../database/schemas/user.schema';
 import { CartService } from './cart.service';
 import { AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+
+interface RequestWithUser extends Request {
+  user: UserDocument;
+}
 
 @ApiTags('Cart')
 @ApiBearerAuth()
 // Apply JwtAuthGuard globally to the entire controller: Requires a valid Bearer Token!
-@UseGuards(JwtAuthGuard) 
+@UseGuards(JwtAuthGuard)
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
@@ -18,7 +33,7 @@ export class CartController {
    */
   @Get()
   @ApiOperation({ summary: 'Retrieve your shopping cart' })
-  getCart(@Request() req: any) {
+  getCart(@Request() req: RequestWithUser) {
     return this.cartService.getCart(req.user.id); // Explicitly maps the action specifically to that user.
   }
 
@@ -28,7 +43,7 @@ export class CartController {
    */
   @Post('items')
   @ApiOperation({ summary: 'Add an item to the cart' })
-  addToCart(@Request() req: any, @Body() dto: AddToCartDto) {
+  addToCart(@Request() req: RequestWithUser, @Body() dto: AddToCartDto) {
     return this.cartService.addToCart(req.user.id, dto);
   }
 
@@ -38,9 +53,12 @@ export class CartController {
    */
   @Patch('items/:id')
   @ApiOperation({ summary: 'Update cart item quantity' })
-  updateQuantity(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateCartItemDto) {
-    // Converts the string ':id' parameter natively into a number via `+id` for DB parsing.
-    return this.cartService.updateQuantity(req.user.id, +id, dto);
+  updateQuantity(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateCartItemDto,
+  ) {
+    return this.cartService.updateQuantity(req.user.id, id, dto);
   }
 
   /**
@@ -49,7 +67,7 @@ export class CartController {
    */
   @Delete('items/:id')
   @ApiOperation({ summary: 'Remove an item from the cart' })
-  removeFromCart(@Request() req: any, @Param('id') id: string) {
-    return this.cartService.removeFromCart(req.user.id, +id);
+  removeFromCart(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.cartService.removeFromCart(req.user.id, id);
   }
 }

@@ -1,8 +1,13 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserDocument } from '../database/schemas/user.schema';
 import { CheckoutService } from './checkout.service';
 import { PaymentDto } from './dto/checkout.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+
+interface RequestWithUser extends Request {
+  user: UserDocument;
+}
 
 @ApiTags('Checkout')
 @ApiBearerAuth()
@@ -18,7 +23,7 @@ export class CheckoutController {
    */
   @Post('payment')
   @ApiOperation({ summary: 'Process a mock payment for an order' })
-  processPayment(@Request() req: any, @Body() dto: PaymentDto) {
+  processPayment(@Request() req: RequestWithUser, @Body() dto: PaymentDto) {
     return this.checkoutService.processPayment(req.user.id, dto);
   }
 }

@@ -2,7 +2,7 @@ import { IsEmail, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
- * RegisterDto defines the exact JSON schema required to successfully 
+ * RegisterDto defines the exact JSON schema required to successfully
  * register a brand new user into the database securely.
  */
 export class RegisterDto {

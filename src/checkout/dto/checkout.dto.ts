@@ -1,10 +1,10 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PaymentDto {
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  orderId: number;
+  @ApiProperty({ example: '507f1f77bcf86cd799439011' })
+  @IsString()
+  orderId: string;
 
   @ApiProperty({ example: 'tok_visa' })
   @IsString()

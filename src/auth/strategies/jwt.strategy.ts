@@ -1,7 +1,7 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../../users/users.service';
 
 /**
@@ -26,14 +26,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * Step 2: Validate payload natively matching an existing User mapping context
    * This is executed instantly *after* the raw internal string JWT evaluates true against the mathematical 'secret' signature!
    */
-  async validate(payload: any) {
+  async validate(payload: { sub: string }) {
     // Security check: Ensure the decoded token maps directly to an ACTIVE existing user ID currently in Postgres DB!
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
       throw new UnauthorizedException();
     }
-    
-    // Returns the exact `user` object. This tells Node.js/NestJS internals to explicitly 
+
+    // Returns the exact `user` object. This tells Node.js/NestJS internals to explicitly
     // connect it directly onto `req.user` which makes @Request() req.user.id work on the Controllers.
     return user;
   }
